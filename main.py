@@ -13,9 +13,10 @@ N8N_CALLBACK_URL = os.getenv("N8N_CALLBACK_URL", "http://n8n:5678/webhook-test/p
 REDIS_URL = os.getenv("REDIS_URL", "redis")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 REDIS_DB = os.getenv("REDIS_DB", 0)
+REDIS_PASSWORD = os.getenv("REDIS_PASSWORD", "")
 
 app = Flask(__name__)
-redis = Redis(host=REDIS_URL, port=REDIS_PORT, db=REDIS_DB, decode_responses=True)
+redis = Redis(host=REDIS_URL, port=REDIS_PORT, db=REDIS_DB, decode_responses=True, password=REDIS_PASSWORD)
 
 
 # --- API: Start workflow ---
