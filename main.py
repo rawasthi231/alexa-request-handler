@@ -19,6 +19,10 @@ app = Flask(__name__)
 redis = Redis(host=REDIS_URL, port=REDIS_PORT, db=REDIS_DB, decode_responses=True, password=REDIS_PASSWORD)
 
 
+@app.route("/health", methods=["GET"])
+def health():
+    return jsonify({"status": "ok"})
+
 # --- API: Start workflow ---
 @app.route("/workflow", methods=["POST"])
 def start_workflow():
