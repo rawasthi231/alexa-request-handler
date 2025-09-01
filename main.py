@@ -9,7 +9,8 @@ import os
 
 load_dotenv()
 
-N8N_CALLBACK_URL = os.getenv("N8N_CALLBACK_URL", "http://n8n:5678/webhook-test/pipeline")
+# N8N_CALLBACK_URL = os.getenv("N8N_CALLBACK_URL", "http://n8n:5678/webhook-test/pipeline")
+RAG_PIPELINE_SERVICE = os.getenv("RAG_PIPELINE_SERVICE", "http://localhost:5500/query")
 REDIS_URL = os.getenv("REDIS_URL", "redis")
 REDIS_PORT = os.getenv("REDIS_PORT", 6379)
 REDIS_DB = os.getenv("REDIS_DB", 0)
@@ -51,6 +52,7 @@ def get_workflow(job_id):
 
 # --- Worker that runs in background ---
 def run_worker():
+    print("Worker started")
     while True:
         job_data = redis.rpop("workflowQueue")
         if not job_data:
@@ -62,12 +64,26 @@ def run_worker():
         # --- Simulate long RAG pipeline ---
         print(f"Processing job {job_id}: {task}")
 
-        # Send request to n8n
-        requests.post(
-            N8N_CALLBACK_URL,
-            json={"job_id": job_id, "task": task},
-        )
+        try:
+            print("Sending request to RAG pipeline service ", RAG_PIPELINE_SERVICE)
+            # Send request to n8n
+            response = requests.post(
+                RAG_PIPELINE_SERVICE,
+                json={"job_id": job_id, "task": task},
+            )
+            print("Response: " + str(response.json()))
+            data = response.json()
+            print("Received callback:" + str(data))
+            if not data:
+                return jsonify({"status": "error", "message": "No data provided"})
 
+            job_id = data.get("job_id")
+            status = data.get("status")
+            result = data.get("result")
+
+            redis.set(job_id, '{"status":"%s","result":"%s"}' % (status, result))
+        except Exception as e:
+            print("Error: " + str(e))
 
 
 @app.route("/n8n/callback", methods=["POST"])
