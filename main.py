@@ -54,7 +54,10 @@ def get_workflow(job_id):
 def run_worker():
     print("Worker started")
     while True:
-        job_data = redis.rpop("workflowQueue")
+        jobs_data = redis.blpop("workflowQueue")
+        print("Jobs Data: " + str(jobs_data))
+        job_data = jobs_data[1]
+        print("Job Data: " + str(job_data))
         if not job_data:
             time.sleep(1)
             continue
